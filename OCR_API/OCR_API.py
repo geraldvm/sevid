@@ -1,6 +1,4 @@
 import base64
-import os
-import io
 from OCR import OCR
 from flask import Flask, jsonify, request
 from io import BytesIO
