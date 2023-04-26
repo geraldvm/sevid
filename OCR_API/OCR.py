@@ -108,7 +108,7 @@ class OCR:
         result = []
         for temp in text:
             result.append(temp.description)
-        return result
+        return result[1:]
 
 
     def process(self,filein, fileout):
