@@ -211,17 +211,9 @@ void setup() {
 
   //Verified ID
   server.on("/verified", HTTP_GET, [](AsyncWebServerRequest * request) {
-    digitalWrite(flash_led, HIGH);
-    delay(100);
-    digitalWrite(flash_led, LOW);
-    delay(100);
-    digitalWrite(flash_led, HIGH);
-    delay(100);
-    digitalWrite(flash_led, LOW);
-    delay(100);
 
     digitalWrite(verified_led, LOW);
-    delay(800);
+    delay(1000);
     digitalWrite(verified_led, HIGH);
     delay(800);
     request->send_P(200, "text/plain", "Ok");
@@ -230,10 +222,8 @@ void setup() {
 
   //Not verified ID
   server.on("/not-verified", HTTP_GET, [](AsyncWebServerRequest * request) {
-    digitalWrite(flash_led, HIGH);
     digitalWrite(not_verified_led, LOW);
-    delay(800);
-    digitalWrite(flash_led, LOW);
+    delay(1000);
     digitalWrite(not_verified_led, HIGH);
     delay(800);
     request->send_P(200, "text/plain", "Ok");
