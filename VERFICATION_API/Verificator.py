@@ -24,6 +24,17 @@ class Verificator:
     def compare_data(self, text):
         pass
 
+    def process_data(self, user_text):
+        temp = user_text.split(",")
+        data = []
+        # Cedula
+        data += [temp[4]+temp[5]+temp[6]]
+        # Nombre
+        data += [temp[-3]+' '+temp[-2]]
+        # Primer Apellido
+        data += [temp[-1]]
+        return data
+
     def search_data(self, user_data):
         # Nombre del archivo de texto
         filename = self.__padronDB
@@ -37,11 +48,12 @@ class Verificator:
                 # Obtener los valores relevantes de la línea
                 id = values[0]
                 Firstname = values[5].strip()
-                SecondName1 = values[6].strip()
-                SecondName2 = values[7].strip()
-                
+                LastName1 = values[6].strip()
+                LastName2 = values[7].strip()
                 # Verificar si los datos personales están presentes en la línea
-                if id == user_data[0] and Firstname == user_data[1] and SecondName1 == user_data[2] and SecondName2 == user_data[3]:
+                #if id == user_data[0] and Firstname == user_data[1] and LastName1 == user_data[2] and LastName2 == user_data[3]:
+                if id == user_data[0] and Firstname == user_data[1] and LastName1 == user_data[2]:
                     return True
+                
             else:
                 return False
