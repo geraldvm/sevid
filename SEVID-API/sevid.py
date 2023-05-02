@@ -15,20 +15,32 @@ limitations under the License.
 """
 
 from io import BytesIO
+from json import JSONDecodeError
 import time
 import requests
 from PIL import Image
 from flask import Flask, jsonify, request
 
 class SEVID_API:
-    def __init__(self, esp32_address,ocr_address ):
+    def __init__(self, esp32_address,ocr_address, verificator_address ):
         self.url_esp32 = f"http://{esp32_address}"
         self.url_ocr_api = ocr_address
+        self.url_verificator_api = verificator_address
+
 
     def capture(self):
         # Hacer la solicitud HTTP al ESP32
         print("Capturing...")
         response = requests.get(self.url_esp32 + '/capture')
+        print(response)
+
+    def send_verification_command(self, status):
+        # Hacer la solicitud HTTP al ESP32
+        print("Sending result...")
+        if (status):
+            response = requests.get(self.url_esp32 + '/verified')
+        else:
+            response = requests.get(self.url_esp32 + '/not-verified')
         print(response)
 
     def start(self):
@@ -50,8 +62,24 @@ class SEVID_API:
             # Enviamos la petición POST con la imagen en el payload
             response = requests.post(self.url_ocr_api + '/recognize-text', files=payload)
             # Imprimimos la respuesta
-            print(response.json())
             return response.json()
+        
+    def verificate_id(self, data_list):
+        print("Verification...")
+        form_data = {
+            'text':','.join(data_list)
+        }
+        response = requests.post(self.url_verificator_api + '/verify', data=form_data)
+        # Imprimimos la respuesta
+        #print(response.json())
+        try:
+            json_response = response.json()
+            return json_response
+        except JSONDecodeError as e:
+            print(f"Error decodificando respuesta: {e}")
+            json_response = None
+            return json_response
+        
         
     def get_image(self):
         # Hacer la solicitud HTTP al ESP32
@@ -89,11 +117,13 @@ app = Flask(__name__)
 
 @app.route('/start', methods=['GET'])
 def start_process():
-    ip_address_esp32 = "192.168.18.21"
+    ip_address_esp32 = "172.20.10.9"
     url_address_ocr_api='http://localhost:5000'
-    api = SEVID_API(ip_address_esp32,url_address_ocr_api)
+    url_address_verification_api='http://localhost:3030'
+    api = SEVID_API(ip_address_esp32,url_address_ocr_api,url_address_verification_api)
     # Take photo
     api.capture()
+    
     # Get image from ESP
     image = api.get_image()
     # Save image
@@ -101,9 +131,13 @@ def start_process():
     api.save_image(image,filename)
     # Analyze image
     filename = "images/test.jpg"
-    response = api.send_ocr(filename)
+    ocr_result = api.send_ocr(filename)
+    print(ocr_result['text'])
+    response = api.verificate_id(ocr_result['text'])
+    api.send_verification_command(response["Status"])
+
+    #response= api.send_verification_command(False)
     return response
-    #return "Ok"
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)
