@@ -122,7 +122,7 @@ class OCR:
         return image, text
     
     def recognizeText(self, image):
-        filename= "temp.jpg"
+        filename= "images/temp.jpg"
         image.save(filename)
         bounds = self.get_document_bounds(filename, FeatureType.BLOCK)
         self.draw_boxes(image, bounds[0], "blue")
@@ -130,5 +130,6 @@ class OCR:
         self.draw_boxes(image, bounds[0], "red")
         bounds,text = self.get_document_bounds(filename, FeatureType.WORD)
         self.draw_boxes(image, bounds, "yellow")
+        image.save(filename)
         return image, text
 
