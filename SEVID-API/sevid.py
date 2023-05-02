@@ -41,11 +41,10 @@ class SEVID_API:
         # Analyze image
         self.send_ocr(image)
              
-    def send_ocr(self, image):
+    def send_ocr(self, filename):
         print("Analyzing OCR")
         # Creamos el payload con la imagen
-        filename = 'a.jpg'
-
+        #filename = 'a.jpg'
         with open(filename, 'rb') as f:
             payload = {'image': f}
             # Enviamos la petición POST con la imagen en el payload
@@ -56,7 +55,7 @@ class SEVID_API:
         
     def get_image(self):
         # Hacer la solicitud HTTP al ESP32
-        time.sleep(1)
+        time.sleep(5)
         print("Getting...")
         response = requests.get(self.url_esp32 + '/picture')
         # Si la solicitud fue exitosa (código 200)
@@ -71,6 +70,8 @@ class SEVID_API:
             return None
     
     def save_image(self, image, img_path):
+        time.sleep(1)
+        print("Saving...")
         # Guardar la imagen en el disco
         image.save(img_path)
 
@@ -88,15 +89,21 @@ app = Flask(__name__)
 
 @app.route('/start', methods=['GET'])
 def start_process():
-    ip_address_esp32 = "192.168.100.2"
+    ip_address_esp32 = "192.168.18.21"
     url_address_ocr_api='http://localhost:5000'
     api = SEVID_API(ip_address_esp32,url_address_ocr_api)
+    # Take photo
+    api.capture()
     # Get image from ESP
-    #image = api.get_image()
+    image = api.get_image()
+    # Save image
+    filename = "images/id.jpg"
+    api.save_image(image,filename)
     # Analyze image
-    image = Image.open("a.jpg")
-    response = api.send_ocr(image)
+    filename = "images/test.jpg"
+    response = api.send_ocr(filename)
     return response
+    #return "Ok"
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)
