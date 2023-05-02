@@ -42,6 +42,7 @@
 #include <StringArray.h>
 #include <SPIFFS.h>
 #include <FS.h>
+#include <HTTPClient.h>
 
 int flash_led = GPIO_NUM_4;
 
@@ -49,6 +50,9 @@ int flash_led = GPIO_NUM_4;
 const char* ssid = SECRET_SSID;
 const char* password = SECRET_PASS;
 
+//The API URL
+String API_URL = "http://192.168.18.4:8000/random";
+  
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 int verified_led = GPIO_NUM_12; // Verified led
@@ -126,8 +130,8 @@ void setup() {
   pinMode(verified_led, OUTPUT);
   pinMode(not_verified_led, OUTPUT);
   digitalWrite(flash_led, LOW);
-  digitalWrite(verified_led, LOW);
-  digitalWrite(not_verified_led, LOW);
+  digitalWrite(verified_led, HIGH);
+  digitalWrite(not_verified_led, HIGH);
 
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
@@ -143,7 +147,7 @@ void setup() {
     delay(500);
     Serial.println("SPIFFS mounted successfully");
   }
-
+ 
   // Print ESP32 Local IP Address
   Serial.println("http://");
   Serial.println(WiFi.localIP());
@@ -198,10 +202,9 @@ void setup() {
   //Take a photo
   server.on("/capture", HTTP_GET, [](AsyncWebServerRequest * request) {
     Serial.println("Taking photo...");
-    digitalWrite(flash_led, HIGH);
-    delay(800);
-    digitalWrite(flash_led, LOW);
+    
     takeNewPhoto = true;
+    //connectWithSEVIDAPI();
     request->send_P(200, "text/plain", "Taking Photo");
   });
 
@@ -217,9 +220,9 @@ void setup() {
     digitalWrite(flash_led, LOW);
     delay(100);
 
-    digitalWrite(verified_led, HIGH);
-    delay(800);
     digitalWrite(verified_led, LOW);
+    delay(800);
+    digitalWrite(verified_led, HIGH);
     delay(800);
     request->send_P(200, "text/plain", "Ok");
   });
@@ -228,10 +231,10 @@ void setup() {
   //Not verified ID
   server.on("/not-verified", HTTP_GET, [](AsyncWebServerRequest * request) {
     digitalWrite(flash_led, HIGH);
-    digitalWrite(not_verified_led, HIGH);
+    digitalWrite(not_verified_led, LOW);
     delay(800);
     digitalWrite(flash_led, LOW);
-    digitalWrite(not_verified_led, LOW);
+    digitalWrite(not_verified_led, HIGH);
     delay(800);
     request->send_P(200, "text/plain", "Ok");
   });
@@ -256,7 +259,13 @@ void setup() {
 
 void loop() {
   if (takeNewPhoto) {
+    digitalWrite(flash_led, HIGH);
+    delay(200);
+    digitalWrite(flash_led, LOW);
+    delay(200);
     capturePhotoSaveSpiffs();
+   
+    
     takeNewPhoto = false;
   }
   delay(1);
@@ -269,7 +278,17 @@ bool checkPhoto( fs::FS &fs ) {
   return ( pic_sz > 100 );
 }
 
-
+void connectWithSEVIDAPI(){
+  //Initiate HTTP client
+  HTTPClient client;
+  //Start the request
+  client.begin(API_URL);
+  //Use HTTP GET request
+  client.GET();
+  //Response from server
+  //response = client.getString();
+  Serial.println("RECEIVING REQUEST!");
+}
 // Capture Photo and Save it to SPIFFS
 void capturePhotoSaveSpiffs( void ) {
   camera_fb_t * fb = NULL; // pointer
